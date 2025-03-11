@@ -1,10 +1,8 @@
 # ai-chat
-https://github.com/mschwarzmueller/ai-chatbot-demo
-
 To install dependencies:
 
 ```bash
-bun install
+bun install (Before first run)
 ```
 
 To run:
