@@ -1,14 +1,15 @@
 import Layout from './shared/layout';
+import { useEffect } from 'hono/jsx';
 
 export default function IndexPage() {
+  // Redirect to the chat page when the component is rendered
+  useEffect(() => {
+    window.location.href = '/chat';
+  }, []);
+
   return (
     <Layout>
-      <div id="counter"></div>
-      {import.meta.env.DEV ? (
-        <script type="module" src="/client/counter.tsx"></script>
-      ) : (
-        <script type="module" src="/static/counter.js"></script>
-      )}
+      <div>Redirecting to chat...</div>
     </Layout>
   );
 }

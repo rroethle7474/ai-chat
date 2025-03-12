@@ -20,3 +20,6 @@ To initially setup prisma for sqlite after creating the schema.prisma file.
  bunx prisma migrate dev --name init
 
  if Scema changes are made, re-run a migration. Another option is delete the app.db and rerun the migrate comman or init. (review this.)
+
+
+ 

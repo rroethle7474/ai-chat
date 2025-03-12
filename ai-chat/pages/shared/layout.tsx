@@ -4,7 +4,7 @@ export default function Layout({ children }: PropsWithChildren) {
   return (
     <html>
       <head>
-        <title>AI Researcher</title>
+        <title>Super awesome AI chats</title>
         {import.meta.env.DEV ? (
           <link rel="stylesheet" href="/client/base.css" />
         ) : (

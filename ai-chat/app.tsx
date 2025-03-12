@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
 import { streamText } from 'hono/streaming';
 import { streamText as generateStream, generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
@@ -10,12 +10,25 @@ import rehypeHighlight from 'rehype-highlight';
 import { unified } from 'unified';
 import { PrismaClient } from '@prisma/client';
 
-import IndexPage from './pages/index';
+// Load environment variables from .env file
+import { config } from 'dotenv';
+config();
+
 import ChatPage from './pages/chat';
 
 const prisma = new PrismaClient();
 
-const openAiModel = openai('gpt-4o-mini');
+// Get the API key from environment variables
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) {
+  console.error('OPENAI_API_KEY is not defined in environment variables');
+  throw new Error('OPENAI_API_KEY is required');
+}
+
+// Initialize OpenAI client with the API key explicitly
+const openAiModel = createOpenAI({
+  apiKey,
+})('gpt-4o-mini');
 const app = new Hono();
 
 app.use('/static/*', serveStatic({ root: './' }));
@@ -74,8 +87,6 @@ app.post('/chat-title', async (c) => {
     prompt: `Generate a very short title based on the following prompt or question sent by the user: """${userPrompt}""".`,
   });
 
-  console.log(text);
-
   await prisma.chat.update({
     where: { id: chatId },
     data: {
@@ -103,7 +114,6 @@ app.post('/chat', async (c) => {
     model: openAiModel,
     messages: history,
   });
-
   let completeMessage = '';
 
   return streamText(c, async (stream) => {
@@ -118,7 +128,6 @@ app.post('/chat', async (c) => {
 
       stream.write(htmlFile.toString());
     }
-
     await prisma.chatMessage.create({
       data: {
         chatId,
@@ -129,6 +138,25 @@ app.post('/chat', async (c) => {
   });
 });
 
-app.get('/', (c) => c.html(<IndexPage />));
+app.delete('/clear-chat/:chatid', async (c) => {
+  const { chatid } = c.req.param();
+  await prisma.chatMessage.deleteMany({
+    where: { chatId: chatid },
+  });
+
+  return c.json({ success: true });
+});
+
+app.delete('/reset-database', async (c) => {
+  // Delete all chat messages first (due to foreign key constraints)
+  await prisma.chatMessage.deleteMany({});
+  
+  // Then delete all chats
+  await prisma.chat.deleteMany({});
+  
+  return c.json({ success: true });
+});
+
+app.get('/', (c) => c.redirect('/chat'));
 
 export default app;

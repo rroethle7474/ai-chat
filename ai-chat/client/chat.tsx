@@ -56,7 +56,7 @@ function Chat() {
           );
         });
     }
-
+    
     const response = await fetch('/chat', {
       method: 'POST',
       headers: {
@@ -100,6 +100,23 @@ function Chat() {
     }
   }
 
+  async function clearChatHistory() {
+    const response = await fetch(`/clear-chat/${chatId}`, { method: 'DELETE' });
+    if (response.ok) {
+      setChatMessages([]);
+    }
+  }
+
+  async function resetDatabase() {
+    if (confirm("Are you sure you want to reset the entire database? This will delete ALL chats and cannot be undone.")) {
+      const response = await fetch('/reset-database', { method: 'DELETE' });
+      if (response.ok) {
+        // Redirect to home to create a new chat
+        window.location.href = '/';
+      }
+    }
+  }
+
   return (
     <>
       <nav class="fixed left-0 h-screen bg-stone-800 w-48 px-6 py-16">
@@ -114,10 +131,26 @@ function Chat() {
               </a>
             </li>
           ))}
+          <li class="mt-auto">
+            <button
+              onClick={resetDatabase}
+              class="text-red-400 hover:text-red-300 text-sm"
+            >
+              Reset Database
+            </button>
+          </li>
         </ul>
       </nav>
       <div class="flex flex-col w-[50rem] min-h-screen py-8">
         <div class="flex-1 flex flex-col justify-end pb-8 gap-4">
+          <div class="flex justify-end mb-4">
+            <button 
+              onClick={clearChatHistory}
+              class="bg-red-500 px-4 py-1 rounded-sm text-white hover:bg-red-600"
+            >
+              Clear Chat History
+            </button>
+          </div>
           {chatMessages.length === 0 && <p>How may I help you?</p>}
           {chatMessages.map((msg) => (
             <article
